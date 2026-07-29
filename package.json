@@ -1,1 +1,1 @@
-{"name":"agent-control-room","version":"0.1.0","private":true,"type":"module","scripts":{"dev":"tauri dev","build":"tauri build","dev:frontend":"vite","build:frontend":"vite build"},"dependencies":{"lucide":"^0.468.0"},"devDependencies":{"@tauri-apps/cli":"^2.5.0","vite":"^6.0.0"}}
+{"name":"agent-control-room","version":"0.1.0","private":true,"type":"module","scripts":{"dev":"tauri dev","build":"tauri build","dev:frontend":"vite","build:frontend":"vite build","tauri":"tauri"},"dependencies":{"lucide":"^0.468.0"},"devDependencies":{"@tauri-apps/cli":"^2.5.0","vite":"^6.0.0"}}
