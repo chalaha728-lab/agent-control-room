@@ -33,9 +33,6 @@
       "nsis": {
         "installMode": "currentUser",
         "displayLanguageSelector": false
-      },
-      "wix": {
-        "language": 1033
       }
     },
     "icon": [
