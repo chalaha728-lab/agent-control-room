@@ -1,8 +1,647 @@
-const apps=[['G','Godot 4.5','platformer-demo · PID 1842','godot','LOCKED'],['◉','Chrome','localhost:3000','chrome','idle'],['</>','VS Code','agent-control-mcp','code','idle'],['$_','Terminal','zsh session','terminal','idle']];
-const state={paused:false,recording:false,events:4,actions:842,activeTab:'Live room',latency:220};
-const toolRows=[['ui_tree','Semantic tree','Read names, roles, states'],['capture_app','Window capture','PNG frame, no focus change'],['click','Background click','Client-relative input'],['godot_scene_tree','Godot scene','Runtime node hierarchy']];
-const icon=(name)=>`<span class="ico" aria-hidden="true">${({'activity':'◌','monitor-play':'▣','repeat-2':'↻','scroll-text':'≡','shield-check':'◇','sliders-horizontal':'☷','crosshair':'⌾','mouse-pointer-2':'⌁','gauge':'◴','sparkles':'✦','pause':'Ⅱ','play':'▶','camera':'◎','info':'ⓘ','circle':'●','more-horizontal':'•••','mouse-pointer-click':'⌁','keyboard':'⌨','lock-keyhole':'⌑'}[name]||'·')}</span>`;
-function render(){document.querySelector('#app').innerHTML=`<div class="shell"><aside class="side"><div class="brand"><span class="mark">⌁</span><span><b>agent control</b><small>live control room</small></span></div><div><label>Operate</label><nav><button class="active" data-tab="Live room">${icon('activity')}Live room</button><button data-tab="Open apps">${icon('monitor-play')}Open apps</button><button data-tab="Replays">${icon('repeat-2')}Replays</button></nav></div><div><label>Observe</label><nav><button data-tab="Event stream">${icon('scroll-text')}Event stream</button><button data-tab="Permissions">${icon('shield-check')}Permissions</button><button data-tab="Adapters">${icon('sliders-horizontal')}Adapters</button></nav></div><div class="health"><b>Local bridge healthy</b><span><em></em>localhost:4317 <code>0.8ms</code></span></div></aside><header class="top"><span>Agent Control MCP <b>/ ${state.activeTab}</b></span><div><strong><em></em>${state.recording?'RECORDING':'LIVE SESSION'}</strong><span class="avatar">DB</span></div></header><main><header class="hero"><div><label>SCOPED COMPUTER USE</label><h1>${state.activeTab==='Live room'?'See what the agent sees.':state.activeTab}</h1><p>${state.activeTab==='Live room'?'One live target, every action visible. Keep working elsewhere while the agent operates in the background.':'Inspect the selected app, adapter health, and evidence without leaving the control room.'}</p></div><div class="hero-actions"><button id="pause">${icon(state.paused?'play':'pause')}${state.paused?'Resume agent':'Pause agent'}</button><button class="primary" id="capture">${icon('camera')}Capture now</button></div></header><section class="metrics"><article><span>Active target ${icon('crosshair')}</span><b>Godot 4.5</b><small class="good">window locked · focus preserved</small></article><article><span>Actions today ${icon('mouse-pointer-2')}</span><b id="actions">${state.actions}</b><small class="good">+118 since last run</small></article><article><span>Capture latency ${icon('gauge')}</span><b>${state.latency}ms</b><small>P95 310ms · fallback ready</small></article><article><span>Agent confidence ${icon('sparkles')}</span><b>98.4%</b><small class="good">semantic + visual agreement</small></article></section><div class="grid"><section><div class="panel"><div class="panel-title"><b>Live target</b><code>frame 000842 · 60 FPS</code><button class="quiet-btn" id="record">${icon('circle')}${state.recording?'Stop recording':'Record session'}</button></div><div class="preview"><div class="target"><span class="appicon godot">G</span><span><b>Godot 4.5</b><small>platformer-demo · background input</small></span><span class="window-tools">${icon('info')}${icon('circle')}${icon('more-horizontal')}</span></div><div class="screen"><span class="tag top-tag">RUNNING</span><span class="scene">scene/main.tscn</span><div class="world"><i class="door"></i><i class="player"></i><i class="ground"></i><i class="cross"></i></div><span class="tag bottom-tag">window only</span><span class="capture-status"><em></em>live capture</span></div><div class="actionbar"><button data-action="Pointer moved">${icon('mouse-pointer-2')}Move pointer</button><button data-action="Click dispatched">${icon('mouse-pointer-click')}Click</button><button data-action="Key sent">${icon('keyboard')}Key press</button><button data-action="Screenshot captured">${icon('camera')}Capture</button></div></div></div><div class="panel health-panel"><div class="panel-title"><b>Runtime health</b><code>last 60 seconds</code></div><div class="health-grid"><div><b>Frame time</b><small>16.6ms avg</small><i><em style="width:82%"></em></i></div><div><b>Input delivery</b><small>99.8% accepted</small><i><em style="width:98%"></em></i></div><div><b>Capture quality</b><small>GPU surface detected</small><i class="orange"><em style="width:91%"></em></i></div></div></div><div class="panel tools-panel"><div class="panel-title"><b>Available tools</b><code>selected target</code></div><div class="tool-list">${toolRows.map(t=>`<button class="tool-row" data-action="${t[0]}"><span class="tool-kicker">MCP</span><span><b>${t[1]}</b><small>${t[2]}</small></span>${icon('chevron-right')}</button>`).join('')}</div></div></section><aside><div class="panel"><div class="panel-title"><b>Action stream</b><code id="stream">live · ${state.events}</code></div><div id="feed" class="feed"><div class="event good"><em></em><div><b>Screenshot captured</b><small>Godot 4.5 · 640 × 400 crop<br>semantic state matched visual state</small></div><code>220ms</code></div><div class="event"><em></em><div><b>Pointer moved</b><small>target Door · client 798, 442<br>background dispatch</small></div><code>410ms</code></div><div class="event warn"><em></em><div><b>Focus preserved</b><small>your active window unchanged<br>synthetic cursor rendered in target</small></div><code>1.2s</code></div><div class="event good"><em></em><div><b>Window attached</b><small>hwnd 0x009A · Godot bridge connected</small></div><code>4.8s</code></div></div></div><div class="panel apps"><div class="panel-title"><b>Open apps</b><code>4 detected</code><button class="quiet-btn" id="refresh">${icon('refresh-cw')}Refresh</button></div>${apps.map(a=>`<div class="app-row" data-app="${a[1]}"><span class="appicon ${a[3]}">${a[0]}</span><span><b>${a[1]}</b><small>${a[2]}</small></span><code class="state ${a[4]==='LOCKED'?'locked':''}">${a[4]}</code></div>`).join('')}</div><div class="panel tools-panel"><div class="panel-title"><b>Session guardrails</b><code>4 controls</code></div><div class="guard-list"><label><span><b>Focus preservation</b><small>Never activate target window</small></span><input type="checkbox" checked></label><label><span><b>Approval gate</b><small>Launch, close, shell actions</small></span><input type="checkbox" checked></label><label><span><b>Evidence capture</b><small>Record screenshots and actions</small></span><input type="checkbox" checked></label></div></div></aside></div><p class="footer">${icon('lock-keyhole')}Scoped safety: only the selected window can be seen or controlled. Launch, close, and shell actions remain approval-gated.</p></main></div>`; wire();}
-function addEvent(title,detail='Godot 4.5 · background dispatch',type='good'){const f=document.querySelector('#feed');if(!f)return;const d=document.createElement('div');d.className='event '+type;d.innerHTML=`<em></em><div><b>${title}</b><small>${detail}<br>just now</small></div><code>now</code>`;f.prepend(d);while(f.children.length>4)f.lastElementChild.remove();state.events++;state.actions++;const a=document.querySelector('#actions');if(a)a.textContent=String(state.actions);const stream=document.querySelector('#stream');if(stream)stream.textContent='live · '+state.events}
-function wire(){document.querySelectorAll('[data-action]').forEach(b=>b.onclick=()=>addEvent(b.dataset.action,b.classList.contains('tool-row')?'MCP call · selected window':'Godot 4.5 · background dispatch'));document.querySelector('#capture').onclick=()=>addEvent('Screenshot captured','Godot 4.5 · full window · focus unchanged');document.querySelector('#record').onclick=()=>{state.recording=!state.recording;addEvent(state.recording?'Recording started':'Recording stopped','session evidence · target remains locked',state.recording?'good':'warn');render()};document.querySelector('#pause').onclick=()=>{state.paused=!state.paused;addEvent(state.paused?'Agent paused':'Agent resumed',state.paused?'actions held · target remains locked':'background dispatch restored',state.paused?'warn':'good');render()};document.querySelector('#refresh').onclick=()=>addEvent('Open apps refreshed','4 windows detected · focus unchanged');document.querySelectorAll('[data-tab]').forEach(b=>b.onclick=()=>{state.activeTab=b.dataset.tab;render()});document.querySelectorAll('.app-row').forEach(b=>b.onclick=()=>addEvent('Target selected',b.dataset.app+' · focus preserved','warn'));}
+// Agent Control Room - Core Interactive Application Logic
+
+const state = {
+  activeTab: 'Live room',
+  paused: false,
+  recording: false,
+  targetApp: 'Godot 4.5',
+  actions: 842,
+  latency: 220,
+  confidence: 98.4,
+  events: [
+    { title: 'Screenshot captured', detail: 'Godot 4.5 · 640 × 400 crop', type: 'good', time: '220ms' },
+    { title: 'Pointer moved', detail: 'target Door · client 798, 442', type: 'good', time: '410ms' },
+    { title: 'Focus preserved', detail: 'active window unchanged · synthetic cursor', type: 'warn', time: '1.2s' },
+    { title: 'Window attached', detail: 'hwnd 0x009A · Godot bridge connected', type: 'good', time: '4.8s' }
+  ],
+  apps: [
+    { name: 'Godot 4.5', pid: '1842', details: 'platformer-demo · hwnd 0x009A', icon: 'godot', state: 'LOCKED' },
+    { name: 'Google Chrome', pid: '4108', details: 'localhost:3000 · DevTools Protocol', icon: 'chrome', state: 'MONITORED' },
+    { name: 'VS Code', pid: '9821', details: 'agent-control-mcp · Workspace', icon: 'code', state: 'IDLE' },
+    { name: 'Windows Terminal', pid: '1204', details: 'powershell session · PID 1204', icon: 'terminal', state: 'IDLE' }
+  ],
+  guardrails: {
+    focusPreserve: true,
+    approvalGate: true,
+    evidenceCapture: true,
+    networkIsolation: true,
+    clipboardGuard: false
+  },
+  adapters: [
+    { name: 'Godot Engine Bridge', proto: 'WebSocket', status: 'Healthy', ping: '0.8ms', version: 'v4.5-stable' },
+    { name: 'Chrome DevTools Protocol', proto: 'CDP / HTTP', status: 'Healthy', ping: '2.4ms', version: 'v124.0' },
+    { name: 'VS Code Language Server', proto: 'JSON-RPC / IPC', status: 'Connected', ping: '1.1ms', version: 'v1.88' },
+    { name: 'OS Synthetic Input Adapter', proto: 'Win32 API', status: 'Active', ping: '0.3ms', version: 'Native Direct' }
+  ],
+  replays: [
+    { frame: '#00842', action: 'Click (798, 442)', target: 'Door Node', timestamp: '12:14:02' },
+    { frame: '#00841', action: 'Move Pointer', target: 'Player Sprite', timestamp: '12:13:58' },
+    { frame: '#00840', action: 'Capture Screenshot', target: 'Full Viewport', timestamp: '12:13:50' },
+    { frame: '#00839', action: 'KeyPress (Space)', target: 'Jump Action', timestamp: '12:13:42' }
+  ],
+  searchQuery: '',
+  eventFilter: 'all'
+};
+
+const icons = {
+  'activity': '⚡',
+  'monitor-play': '🖥️',
+  'repeat-2': '🎬',
+  'scroll-text': '📜',
+  'shield-check': '🛡️',
+  'sliders-horizontal': '⚙️',
+  'crosshair': '🎯',
+  'mouse-pointer-2': '🖱️',
+  'gauge': '⏱️',
+  'sparkles': '✨',
+  'pause': '⏸️',
+  'play': '▶️',
+  'camera': '📷',
+  'circle': '🔴',
+  'mouse-pointer-click': '👆',
+  'keyboard': '⌨️',
+  'lock-keyhole': '🔒',
+  'refresh-cw': '🔄',
+  'search': '🔍'
+};
+
+function getIcon(name) {
+  return `<span class="nav-icon">${icons[name] || '•'}</span>`;
+}
+
+function render() {
+  const appEl = document.querySelector('#app');
+  if (!appEl) return;
+
+  appEl.innerHTML = `
+    <div class="shell">
+      <!-- Side Panel -->
+      <aside class="side">
+        <div class="brand">
+          <div class="mark">⌁</div>
+          <div class="brand-text">
+            <b>Agent Control</b>
+            <small>Live Control Room</small>
+          </div>
+        </div>
+
+        <div class="side-group">
+          <label>Operate</label>
+          <nav class="nav">
+            <button class="nav-btn ${state.activeTab === 'Live room' ? 'active' : ''}" data-tab="Live room">
+              ${getIcon('activity')} Live room
+            </button>
+            <button class="nav-btn ${state.activeTab === 'Open apps' ? 'active' : ''}" data-tab="Open apps">
+              ${getIcon('monitor-play')} Open apps
+            </button>
+            <button class="nav-btn ${state.activeTab === 'Replays' ? 'active' : ''}" data-tab="Replays">
+              ${getIcon('repeat-2')} Replays
+            </button>
+          </nav>
+        </div>
+
+        <div class="side-group">
+          <label>Observe</label>
+          <nav class="nav">
+            <button class="nav-btn ${state.activeTab === 'Event stream' ? 'active' : ''}" data-tab="Event stream">
+              ${getIcon('scroll-text')} Event stream
+            </button>
+            <button class="nav-btn ${state.activeTab === 'Permissions' ? 'active' : ''}" data-tab="Permissions">
+              ${getIcon('shield-check')} Guardrails
+            </button>
+            <button class="nav-btn ${state.activeTab === 'Adapters' ? 'active' : ''}" data-tab="Adapters">
+              ${getIcon('sliders-horizontal')} Adapters
+            </button>
+          </nav>
+        </div>
+
+        <div class="health-footer">
+          <b>Local Bridge Connected</b>
+          <div class="health-status">
+            <div class="dot-pulse"></div>
+            <span>localhost:4317</span>
+            <code style="margin-left: auto; color: var(--accent);">0.8ms</code>
+          </div>
+        </div>
+      </aside>
+
+      <!-- Main Header -->
+      <header class="top">
+        <div class="breadcrumbs">
+          <span>Agent Control MCP</span>
+          <span>/</span>
+          <b>${state.activeTab}</b>
+        </div>
+        <div class="top-right">
+          <div class="session-badge ${state.recording ? 'recording' : ''}">
+            <div class="dot-pulse" style="${state.recording ? 'background: var(--red); box-shadow: 0 0 10px var(--red);' : ''}"></div>
+            ${state.recording ? 'RECORDING SESSION' : 'LIVE SESSION'}
+          </div>
+          <div class="user-avatar">AC</div>
+        </div>
+      </header>
+
+      <!-- Main Viewport -->
+      <main>
+        ${renderContent()}
+        
+        <p style="margin-top: 32px; font-size: 12px; color: var(--quiet); display: flex; align-items: center; gap: 8px;">
+          ${getIcon('lock-keyhole')} Scoped Safety: Target window is strictly isolated. All background dispatches maintain focus preservation.
+        </p>
+      </main>
+    </div>
+  `;
+
+  bindEvents();
+}
+
+function renderContent() {
+  switch (state.activeTab) {
+    case 'Open apps':
+      return renderOpenAppsTab();
+    case 'Replays':
+      return renderReplaysTab();
+    case 'Event stream':
+      return renderEventStreamTab();
+    case 'Permissions':
+      return renderPermissionsTab();
+    case 'Adapters':
+      return renderAdaptersTab();
+    case 'Live room':
+    default:
+      return renderLiveRoomTab();
+  }
+}
+
+function renderLiveRoomTab() {
+  return `
+    <div class="hero">
+      <div class="hero-text">
+        <label>SCOPED COMPUTER USE</label>
+        <h1>See what the agent sees.</h1>
+        <p>One live target, every action visible. Keep working elsewhere while the agent operates in the background.</p>
+      </div>
+      <div class="hero-actions">
+        <button class="btn" id="btn-pause">
+          ${getIcon(state.paused ? 'play' : 'pause')} ${state.paused ? 'Resume Agent' : 'Pause Agent'}
+        </button>
+        <button class="btn btn-primary" id="btn-capture">
+          ${getIcon('camera')} Capture Now
+        </button>
+      </div>
+    </div>
+
+    <!-- Metrics -->
+    <div class="metrics-grid">
+      <div class="metric-card">
+        <div class="metric-header">
+          <span>Active Target</span>
+          ${getIcon('crosshair')}
+        </div>
+        <div class="metric-value">${state.targetApp}</div>
+        <div class="metric-sub good">● Window locked · focus preserved</div>
+      </div>
+
+      <div class="metric-card">
+        <div class="metric-header">
+          <span>Actions Executed</span>
+          ${getIcon('mouse-pointer-2')}
+        </div>
+        <div class="metric-value" id="val-actions">${state.actions}</div>
+        <div class="metric-sub good">+118 in current session</div>
+      </div>
+
+      <div class="metric-card">
+        <div class="metric-header">
+          <span>Capture Latency</span>
+          ${getIcon('gauge')}
+        </div>
+        <div class="metric-value">${state.latency}ms</div>
+        <div class="metric-sub">P95 310ms · fallback ready</div>
+      </div>
+
+      <div class="metric-card">
+        <div class="metric-header">
+          <span>Agent Confidence</span>
+          ${getIcon('sparkles')}
+        </div>
+        <div class="metric-value">${state.confidence}%</div>
+        <div class="metric-sub good">Semantic + visual agreement</div>
+      </div>
+    </div>
+
+    <!-- Content Grid -->
+    <div class="content-grid">
+      <div>
+        <!-- Live Target Panel -->
+        <div class="panel">
+          <div class="panel-header">
+            <span class="panel-title">Live Target Stream</span>
+            <div style="display: flex; align-items: center; gap: 12px;">
+              <span class="panel-code">FRAME #00842 · 60 FPS</span>
+              <button class="btn" id="btn-record" style="padding: 6px 12px; font-size: 12px;">
+                ${getIcon('circle')} ${state.recording ? 'Stop Recording' : 'Record Session'}
+              </button>
+            </div>
+          </div>
+
+          <div class="viewport-container">
+            <div class="target-bar">
+              <div class="app-info">
+                <div class="app-icon godot">G</div>
+                <div>
+                  <b style="font-size: 13px;">${state.targetApp}</b>
+                  <div style="font-size: 11px; color: var(--quiet); font-family: var(--mono);">platformer-demo · background input</div>
+                </div>
+              </div>
+            </div>
+
+            <div class="screen-canvas" id="interactive-screen">
+              <div class="screen-tag tag-top-left">RUNNING</div>
+              <div class="screen-tag tag-top-right">scene/main.tscn</div>
+              
+              <div class="game-world">
+                <div class="door-target"></div>
+                <div class="player-avatar" id="player-sprite"></div>
+                <div class="ground-line"></div>
+                <div class="crosshair"></div>
+              </div>
+
+              <div class="screen-tag tag-bottom-left">window only</div>
+              <div class="screen-tag tag-bottom-right">
+                <div class="dot-pulse"></div> Live capture
+              </div>
+            </div>
+
+            <div class="action-bar">
+              <button class="action-btn" id="act-move">${getIcon('mouse-pointer-2')} Move Pointer</button>
+              <button class="action-btn" id="act-click">${getIcon('mouse-pointer-click')} Click Target</button>
+              <button class="action-btn" id="act-key">${getIcon('keyboard')} Send Key</button>
+              <button class="action-btn" id="act-screen">${getIcon('camera')} Capture Frame</button>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Action Feed -->
+      <aside>
+        <div class="panel">
+          <div class="panel-header">
+            <span class="panel-title">Action Stream</span>
+            <span class="panel-code">LIVE · ${state.events.length}</span>
+          </div>
+
+          <div class="feed-container" id="feed-container">
+            ${state.events.map(ev => `
+              <div class="event-row ${ev.type}">
+                <div class="event-dot"></div>
+                <div>
+                  <b>${ev.title}</b>
+                  <small>${ev.detail}</small>
+                </div>
+                <div class="event-time">${ev.time}</div>
+              </div>
+            `).join('')}
+          </div>
+        </div>
+      </aside>
+    </div>
+  `;
+}
+
+function renderOpenAppsTab() {
+  return `
+    <div class="hero">
+      <div class="hero-text">
+        <label>PROCESS DETECTION</label>
+        <h1>Detected Applications</h1>
+        <p>Inspect active desktop windows and attach agent control targets safely.</p>
+      </div>
+      <div class="hero-actions">
+        <button class="btn btn-primary" id="btn-refresh-apps">${getIcon('refresh-cw')} Refresh Processes</button>
+      </div>
+    </div>
+
+    <div class="panel">
+      <div class="filter-bar">
+        <input type="text" class="search-input" id="app-search" placeholder="Search application name or PID..." value="${state.searchQuery}">
+      </div>
+
+      <div class="app-list">
+        ${state.apps
+          .filter(a => a.name.toLowerCase().includes(state.searchQuery.toLowerCase()))
+          .map(app => `
+            <div class="app-item">
+              <div class="app-meta">
+                <div class="app-icon ${app.icon}">${app.name.charAt(0)}</div>
+                <div>
+                  <b style="font-size: 14px;">${app.name}</b>
+                  <div style="font-family: var(--mono); font-size: 11px; color: var(--quiet);">${app.details}</div>
+                </div>
+              </div>
+              <div style="display: flex; align-items: center; gap: 12px;">
+                <span class="app-badge ${app.state === 'LOCKED' ? 'locked' : ''}">${app.state}</span>
+                <button class="btn btn-attach" data-target="${app.name}" style="padding: 6px 12px; font-size: 12px;">
+                  ${app.name === state.targetApp ? 'Active Target' : 'Attach Target'}
+                </button>
+              </div>
+            </div>
+          `).join('')}
+      </div>
+    </div>
+  `;
+}
+
+function renderReplaysTab() {
+  return `
+    <div class="hero">
+      <div class="hero-text">
+        <label>EVIDENCE & TIMELINE</label>
+        <h1>Session Replays</h1>
+        <p>Review action recordings, inspect keyframe state captures, and export evidence logs.</p>
+      </div>
+      <div class="hero-actions">
+        <button class="btn btn-primary" id="btn-export-replay">${getIcon('scroll-text')} Export Replay Bundle</button>
+      </div>
+    </div>
+
+    <div class="panel">
+      <div class="panel-header">
+        <span class="panel-title">Recorded Session Keyframes</span>
+        <span class="panel-code">4 FRAMES STORED</span>
+      </div>
+
+      <div class="app-list">
+        ${state.replays.map(r => `
+          <div class="app-item">
+            <div class="app-meta">
+              <div style="font-family: var(--mono); font-weight: 700; color: var(--accent);">${r.frame}</div>
+              <div>
+                <b>${r.action}</b>
+                <div style="font-family: var(--mono); font-size: 11px; color: var(--quiet);">Target: ${r.target} · Timestamp: ${r.timestamp}</div>
+              </div>
+            </div>
+            <button class="btn" style="padding: 6px 12px; font-size: 12px;">Inspect Frame</button>
+          </div>
+        `).join('')}
+      </div>
+    </div>
+  `;
+}
+
+function renderEventStreamTab() {
+  return `
+    <div class="hero">
+      <div class="hero-text">
+        <label>TELEMETRY & LOGS</label>
+        <h1>Live Event Stream</h1>
+        <p>Real-time audit log of all semantic actions, window attachments, and input dispatches.</p>
+      </div>
+      <div class="hero-actions">
+        <button class="btn" id="btn-clear-logs">Clear Stream</button>
+      </div>
+    </div>
+
+    <div class="panel">
+      <div class="panel-header">
+        <span class="panel-title">Live Log Console</span>
+        <span class="panel-code">AUTO-SCROLL ENABLED</span>
+      </div>
+
+      <div class="feed-container" style="max-height: 500px;">
+        ${state.events.map(ev => `
+          <div class="event-row ${ev.type}">
+            <div class="event-dot"></div>
+            <div>
+              <b>${ev.title}</b>
+              <small>${ev.detail}</small>
+            </div>
+            <div class="event-time">${ev.time}</div>
+          </div>
+        `).join('')}
+      </div>
+    </div>
+  `;
+}
+
+function renderPermissionsTab() {
+  return `
+    <div class="hero">
+      <div class="hero-text">
+        <label>SECURITY & ISOLATION</label>
+        <h1>Session Guardrails</h1>
+        <p>Configure agent execution boundaries and window isolation security policies.</p>
+      </div>
+    </div>
+
+    <div class="panel">
+      <div class="panel-header">
+        <span class="panel-title">Security Policies</span>
+        <span class="panel-code">ENFORCED AT BRIDGES</span>
+      </div>
+
+      <div class="guard-item">
+        <div class="guard-info">
+          <b>Focus Preservation</b>
+          <small>Never steal window focus during background synthetic clicks or typing</small>
+        </div>
+        <label class="switch">
+          <input type="checkbox" id="guard-focus" ${state.guardrails.focusPreserve ? 'checked' : ''}>
+          <span class="slider"></span>
+        </label>
+      </div>
+
+      <div class="guard-item">
+        <div class="guard-info">
+          <b>Approval Gate</b>
+          <small>Require explicit human confirmation for file deletion and shell commands</small>
+        </div>
+        <label class="switch">
+          <input type="checkbox" id="guard-approval" ${state.guardrails.approvalGate ? 'checked' : ''}>
+          <span class="slider"></span>
+        </label>
+      </div>
+
+      <div class="guard-item">
+        <div class="guard-info">
+          <b>Evidence Capture</b>
+          <small>Record full screenshot timeline and action metadata</small>
+        </div>
+        <label class="switch">
+          <input type="checkbox" id="guard-evidence" ${state.guardrails.evidenceCapture ? 'checked' : ''}>
+          <span class="slider"></span>
+        </label>
+      </div>
+
+      <div class="guard-item">
+        <div class="guard-info">
+          <b>Network Sandbox</b>
+          <small>Restrict outbound network connections to local MCP endpoints</small>
+        </div>
+        <label class="switch">
+          <input type="checkbox" id="guard-network" ${state.guardrails.networkIsolation ? 'checked' : ''}>
+          <span class="slider"></span>
+        </label>
+      </div>
+    </div>
+  `;
+}
+
+function renderAdaptersTab() {
+  return `
+    <div class="hero">
+      <div class="hero-text">
+        <label>PROTOCOL BRIDGES</label>
+        <h1>Connected Adapters</h1>
+        <p>Active communication bridges interfacing with target applications and OS input APIs.</p>
+      </div>
+      <div class="hero-actions">
+        <button class="btn btn-primary" id="btn-ping-adapters">${getIcon('refresh-cw')} Run Health Diagnostics</button>
+      </div>
+    </div>
+
+    <div class="adapter-grid">
+      ${state.adapters.map(ad => `
+        <div class="adapter-card">
+          <div style="display: flex; justify-content: space-between; align-items: flex-start;">
+            <h3>${ad.name}</h3>
+            <span class="app-badge locked">${ad.status}</span>
+          </div>
+          <p>Protocol: ${ad.proto} · Version: ${ad.version}</p>
+          <div style="font-family: var(--mono); font-size: 12px; color: var(--accent);">Latency: ${ad.ping}</div>
+        </div>
+      `).join('')}
+    </div>
+  `;
+}
+
+function bindEvents() {
+  // Navigation tabs
+  document.querySelectorAll('[data-tab]').forEach(btn => {
+    btn.onclick = () => {
+      state.activeTab = btn.dataset.tab;
+      render();
+    };
+  });
+
+  // Action buttons
+  const pauseBtn = document.querySelector('#btn-pause');
+  if (pauseBtn) {
+    pauseBtn.onclick = () => {
+      state.paused = !state.paused;
+      pushLog(state.paused ? 'Agent Paused' : 'Agent Resumed', state.paused ? 'background dispatch held' : 'dispatch restored', state.paused ? 'warn' : 'good');
+      render();
+    };
+  }
+
+  const recordBtn = document.querySelector('#btn-record');
+  if (recordBtn) {
+    recordBtn.onclick = () => {
+      state.recording = !state.recording;
+      pushLog(state.recording ? 'Recording Started' : 'Recording Stopped', 'session evidence capture active', state.recording ? 'good' : 'warn');
+      render();
+    };
+  }
+
+  const captureBtn = document.querySelector('#btn-capture');
+  if (captureBtn) {
+    captureBtn.onclick = () => {
+      pushLog('Screenshot Captured', `${state.targetApp} · 1440 × 900 frame`, 'good');
+      render();
+    };
+  }
+
+  // Interactive controls
+  const actMove = document.querySelector('#act-move');
+  if (actMove) {
+    actMove.onclick = () => {
+      movePlayer();
+      pushLog('Pointer Moved', 'target Door · client 798, 442', 'good');
+      render();
+    };
+  }
+
+  const actClick = document.querySelector('#act-click');
+  if (actClick) {
+    actClick.onclick = () => {
+      pushLog('Click Dispatched', 'Door Node · background click', 'good');
+      render();
+    };
+  }
+
+  const actKey = document.querySelector('#act-key');
+  if (actKey) {
+    actKey.onclick = () => {
+      pushLog('Key Sent', 'Space · jump action', 'good');
+      render();
+    };
+  }
+
+  const actScreen = document.querySelector('#act-screen');
+  if (actScreen) {
+    actScreen.onclick = () => {
+      pushLog('Screenshot Captured', 'viewport crop · focus preserved', 'good');
+      render();
+    };
+  }
+
+  // Attach buttons
+  document.querySelectorAll('.btn-attach').forEach(btn => {
+    btn.onclick = () => {
+      state.targetApp = btn.dataset.target;
+      pushLog('Target Switched', `Attached to ${state.targetApp}`, 'warn');
+      render();
+    };
+  });
+
+  // Search input
+  const searchInput = document.querySelector('#app-search');
+  if (searchInput) {
+    searchInput.oninput = (e) => {
+      state.searchQuery = e.target.value;
+      render();
+    };
+  }
+
+  // Refresh processes
+  const refreshApps = document.querySelector('#btn-refresh-apps');
+  if (refreshApps) {
+    refreshApps.onclick = () => {
+      pushLog('Processes Refreshed', '4 active windows detected', 'good');
+      render();
+    };
+  }
+
+  // Health diagnostics
+  const pingBtn = document.querySelector('#btn-ping-adapters');
+  if (pingBtn) {
+    pingBtn.onclick = () => {
+      pushLog('Diagnostics Ran', 'All 4 bridges healthy (avg 1.1ms)', 'good');
+      render();
+    };
+  }
+}
+
+function movePlayer() {
+  state.actions += 1;
+  const sprite = document.querySelector('#player-sprite');
+  if (sprite) {
+    const currentLeft = parseInt(sprite.style.left || '35', 10);
+    const newLeft = currentLeft > 60 ? 25 : currentLeft + 15;
+    sprite.style.left = `${newLeft}%`;
+  }
+}
+
+function pushLog(title, detail, type = 'good') {
+  state.actions += 1;
+  state.events.unshift({
+    title,
+    detail,
+    type,
+    time: 'just now'
+  });
+  if (state.events.length > 15) state.events.pop();
+}
+
+// Initial render
 render();
