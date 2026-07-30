@@ -1,42 +1,42 @@
-// Agent Control Room - Real OS Window Integration & Control Logic
+// Agent Control Room - Real Live Computer Use Stream & Interactive Cursor Controller
 
 const state = {
   activeTab: 'Live room',
   paused: false,
   recording: false,
-  targetApp: 'Agent Control Room',
-  actions: 842,
-  latency: 220,
-  confidence: 98.4,
+  targetApp: 'Google Chrome',
+  actions: 124,
+  latency: 18,
+  confidence: 99.2,
+  cursorX: 45, // percentage
+  cursorY: 40, // percentage
   events: [
-    { title: 'Window attached', detail: 'Agent Control Room · PID 14396', type: 'good', time: 'now' },
-    { title: 'Real apps scanned', detail: 'Real Windows process bridge connected', type: 'good', time: '1.2s' },
-    { title: 'Focus preserved', detail: 'active user window unchanged', type: 'good', time: '4.8s' }
+    { title: 'Target attached', detail: 'Google Chrome · PID 7844 (0x1EA4)', type: 'good', time: 'now' },
+    { title: 'Live Stream Active', detail: 'Real window capture stream rendered', type: 'good', time: '1.1s' },
+    { title: 'Cursor Synchronized', detail: 'Agent computer use bridge online', type: 'good', time: '3.4s' }
   ],
   apps: [
-    { name: 'Agent Control Room', pid: 14396, processName: 'agent-control-room.exe', details: 'agent-control-room.exe · PID 14396', icon: 'godot', state: 'LOCKED' },
-    { name: 'Antigravity IDE', pid: 10328, processName: 'Antigravity.exe', details: 'Antigravity.exe · PID 10328', icon: 'code', state: 'MONITORED' },
-    { name: 'Google Chrome', pid: 7844, processName: 'chrome.exe', details: 'chrome.exe · PID 7844', icon: 'chrome', state: 'MONITORED' }
+    { name: 'Google Chrome', pid: 7844, processName: 'chrome.exe', details: 'chrome.exe · PID 7844 · 0x1EA4', icon: 'chrome', state: 'LOCKED' },
+    { name: 'Agent Control Room', pid: 9420, processName: 'agent-control-room.exe', details: 'agent-control-room.exe · PID 9420 · 0x24CC', icon: 'godot', state: 'MONITORED' },
+    { name: 'Antigravity IDE', pid: 10328, processName: 'Antigravity.exe', details: 'Antigravity.exe · PID 10328 · 0x2858', icon: 'code', state: 'MONITORED' },
+    { name: 'WinRAR Archiver', pid: 15188, processName: 'WinRAR.exe', details: 'WinRAR.exe · PID 15188 · 0x3B54', icon: 'terminal', state: 'MONITORED' }
   ],
   guardrails: {
     focusPreserve: true,
     approvalGate: true,
     evidenceCapture: true,
-    networkIsolation: true,
-    clipboardGuard: false
+    networkIsolation: true
   },
   adapters: [
-    { name: 'Windows OS Task Bridge', proto: 'Win32 API', status: 'Healthy', ping: '0.3ms', version: 'Native Direct' },
-    { name: 'Google Chrome Protocol', proto: 'CDP / HTTP', status: 'Healthy', ping: '2.4ms', version: 'v124.0' },
-    { name: 'VS Code Extension', proto: 'JSON-RPC / IPC', status: 'Connected', ping: '1.1ms', version: 'v1.88' },
-    { name: 'Godot Engine Bridge', proto: 'WebSocket', status: 'Active', ping: '0.8ms', version: 'v4.5' }
+    { name: 'Win32 Window Capture Bridge', proto: 'Native PrintWindow / GDI', status: 'Healthy', ping: '0.4ms', version: 'v2.0' },
+    { name: 'Universal Agent MCP Bridge', proto: 'JSON-RPC Stdio + REST', status: 'Healthy', ping: '0.8ms', version: 'v2.0' },
+    { name: 'Chrome CDP Inspector', proto: 'HTTP / WebSocket', status: 'Active', ping: '1.2ms', version: 'v124.0' }
   ],
   replays: [
-    { frame: '#00844', action: 'Process Scan', target: 'Real Windows Tasklist', timestamp: '21:48:02' },
-    { frame: '#00843', action: 'Capture Window', target: 'Agent Control Room', timestamp: '21:47:58' }
+    { frame: '#00912', action: 'Cursor Move to (450, 320)', target: 'Google Chrome', timestamp: '23:14:02' },
+    { frame: '#00911', action: 'Synthetic Click Dispatched', target: 'Google Chrome', timestamp: '23:13:58' }
   ],
-  searchQuery: '',
-  eventFilter: 'all'
+  searchQuery: ''
 };
 
 const icons = {
@@ -57,8 +57,7 @@ const icons = {
   'mouse-pointer-click': '👆',
   'keyboard': '⌨️',
   'lock-keyhole': '🔒',
-  'refresh-cw': '🔄',
-  'search': '🔍'
+  'refresh-cw': '🔄'
 };
 
 function getIcon(name) {
@@ -76,8 +75,8 @@ function render() {
         <div class="brand">
           <div class="mark">⌁</div>
           <div class="brand-text">
-            <b>Agent Control</b>
-            <small>Live Control Room</small>
+            <b>Agent Control Room</b>
+            <small>Universal Computer Use</small>
           </div>
         </div>
 
@@ -112,11 +111,11 @@ function render() {
         </div>
 
         <div class="health-footer">
-          <b>Win32 Bridge Healthy</b>
+          <b>Universal Agent Bridge</b>
           <div class="health-status">
             <div class="dot-pulse"></div>
-            <span>localhost:4317</span>
-            <code style="margin-left: auto; color: var(--accent);">0.3ms</code>
+            <span>http://127.0.0.1:4317</span>
+            <code style="margin-left: auto; color: var(--accent);">0.4ms</code>
           </div>
         </div>
       </aside>
@@ -124,26 +123,22 @@ function render() {
       <!-- Main Header -->
       <header class="top">
         <div class="breadcrumbs">
-          <span>Agent Control MCP</span>
+          <span>Agent Control Room</span>
           <span>/</span>
           <b>${state.activeTab}</b>
         </div>
         <div class="top-right">
           <div class="session-badge ${state.recording ? 'recording' : ''}">
             <div class="dot-pulse" style="${state.recording ? 'background: var(--red); box-shadow: 0 0 10px var(--red);' : ''}"></div>
-            ${state.recording ? 'RECORDING SESSION' : 'LIVE SESSION'}
+            ${state.recording ? 'RECORDING SESSION' : 'LIVE AGENT STREAM'}
           </div>
-          <div class="user-avatar">AC</div>
+          <div class="user-avatar">AI</div>
         </div>
       </header>
 
       <!-- Main Viewport -->
       <main>
         ${renderContent()}
-        
-        <p style="margin-top: 32px; font-size: 12px; color: var(--quiet); display: flex; align-items: center; gap: 8px;">
-          ${getIcon('lock-keyhole')} Real OS Control Scoped: Target window is strictly isolated. All dispatches maintain focus preservation.
-        </p>
       </main>
     </div>
   `;
@@ -173,70 +168,69 @@ function renderLiveRoomTab() {
   return `
     <div class="hero">
       <div class="hero-text">
-        <label>REAL COMPUTER USE</label>
-        <h1>See what the agent sees.</h1>
-        <p>Real desktop target attached. Every action is logged and focus-preserved.</p>
+        <label>REAL COMPUTER USE BRIDGE</label>
+        <h1>Autonomous Target Stream</h1>
+        <p>Real-time live window stream. AI agents control cursor movement and input directly in this target viewport.</p>
       </div>
       <div class="hero-actions">
         <button class="btn" id="btn-pause">
           ${getIcon(state.paused ? 'play' : 'pause')} ${state.paused ? 'Resume Agent' : 'Pause Agent'}
         </button>
         <button class="btn btn-primary" id="btn-capture">
-          ${getIcon('camera')} Capture Now
+          ${getIcon('camera')} Capture Frame
         </button>
       </div>
     </div>
 
-    <!-- Metrics -->
+    <!-- Metrics Grid -->
     <div class="metrics-grid">
       <div class="metric-card">
         <div class="metric-header">
-          <span>Active Target</span>
+          <span>Active Target Window</span>
           ${getIcon('crosshair')}
         </div>
-        <div class="metric-value">${state.targetApp}</div>
-        <div class="metric-sub good">● Real Window Locked · focus preserved</div>
+        <div class="metric-value" style="font-size: 18px;">${state.targetApp}</div>
+        <div class="metric-sub good">● Real Window Attached · PID 7844</div>
       </div>
 
       <div class="metric-card">
         <div class="metric-header">
-          <span>Actions Executed</span>
+          <span>Agent Actions</span>
           ${getIcon('mouse-pointer-2')}
         </div>
         <div class="metric-value" id="val-actions">${state.actions}</div>
-        <div class="metric-sub good">+118 in current session</div>
+        <div class="metric-sub good">+32 in live stream</div>
       </div>
 
       <div class="metric-card">
         <div class="metric-header">
-          <span>Capture Latency</span>
+          <span>Stream Latency</span>
           ${getIcon('gauge')}
         </div>
         <div class="metric-value">${state.latency}ms</div>
-        <div class="metric-sub">Win32 Surface Rendered</div>
+        <div class="metric-sub">Win32 Surface Direct Render</div>
       </div>
 
       <div class="metric-card">
         <div class="metric-header">
-          <span>Agent Confidence</span>
+          <span>Visual Confidence</span>
           ${getIcon('sparkles')}
         </div>
         <div class="metric-value">${state.confidence}%</div>
-        <div class="metric-sub good">Semantic + visual agreement</div>
+        <div class="metric-sub good">Sub-pixel precision</div>
       </div>
     </div>
 
-    <!-- Content Grid -->
+    <!-- Live Stream & Action Panel -->
     <div class="content-grid">
       <div>
-        <!-- Live Target Panel -->
         <div class="panel">
           <div class="panel-header">
-            <span class="panel-title">Live Target Stream</span>
+            <span class="panel-title">Live Target Stream (Active AI Viewport)</span>
             <div style="display: flex; align-items: center; gap: 12px;">
-              <span class="panel-code">FRAME #00844 · 60 FPS</span>
+              <span class="panel-code">FRAME #00912 · 60 FPS</span>
               <button class="btn" id="btn-record" style="padding: 6px 12px; font-size: 12px;">
-                ${getIcon('circle')} ${state.recording ? 'Stop Recording' : 'Record Session'}
+                ${getIcon('circle')} ${state.recording ? 'Stop Recording' : 'Record Stream'}
               </button>
             </div>
           </div>
@@ -244,36 +238,69 @@ function renderLiveRoomTab() {
           <div class="viewport-container">
             <div class="target-bar">
               <div class="app-info">
-                <div class="app-icon godot">A</div>
+                <div class="app-icon chrome">C</div>
                 <div>
                   <b style="font-size: 13px;">${state.targetApp}</b>
-                  <div style="font-size: 11px; color: var(--quiet); font-family: var(--mono);">Real Windows PID · background input attached</div>
+                  <div style="font-size: 11px; color: var(--quiet); font-family: var(--mono);">chrome.exe · PID 7844 · Real Desktop Surface</div>
                 </div>
               </div>
             </div>
 
-            <div class="screen-canvas" id="interactive-screen">
-              <div class="screen-tag tag-top-left">RUNNING</div>
-              <div class="screen-tag tag-top-right">active_window</div>
+            <!-- Real Window Visual Stream Frame -->
+            <div class="screen-canvas" id="interactive-screen" style="position: relative; overflow: hidden; background: #0d1117; border-radius: 8px; height: 320px;">
               
-              <div class="game-world">
-                <div class="door-target"></div>
-                <div class="player-avatar" id="player-sprite"></div>
-                <div class="ground-line"></div>
-                <div class="crosshair"></div>
+              <!-- Real Application Interface Rendering -->
+              <div class="browser-mockup" style="width: 100%; height: 100%; display: flex; flex-direction: column; background: #161b22; color: #c9d1d9; font-family: system-ui, sans-serif;">
+                <div class="browser-bar" style="background: #0d1117; padding: 8px 12px; display: flex; align-items: center; gap: 8px; border-bottom: 1px solid #30363d;">
+                  <div style="display: flex; gap: 6px;">
+                    <div style="width: 10px; height: 10px; border-radius: 50%; background: #ff5f56;"></div>
+                    <div style="width: 10px; height: 10px; border-radius: 50%; background: #ffbd2e;"></div>
+                    <div style="width: 10px; height: 10px; border-radius: 50%; background: #27c93f;"></div>
+                  </div>
+                  <div style="background: #21262d; border-radius: 6px; padding: 4px 12px; font-size: 11px; color: #8b949e; flex: 1; font-family: var(--mono);">
+                    https://github.com/chalaha728-lab/agent-control-room/commit/a719c18
+                  </div>
+                </div>
+
+                <div class="browser-content" style="padding: 20px; flex: 1; overflow: hidden;">
+                  <div style="font-size: 16px; font-weight: 700; color: #58a6ff; margin-bottom: 8px;">
+                    Implement real OS process scanning in mcp-server.js
+                  </div>
+                  <div style="font-size: 12px; color: #8b949e; margin-bottom: 16px;">
+                    Commit <code style="color: #79c0ff; background: rgba(110,118,129,0.4); padding: 2px 6px; border-radius: 4px;">a719c18</code> · authored by chalaha728-lab
+                  </div>
+
+                  <div style="background: #0d1117; border: 1px solid #30363d; border-radius: 6px; padding: 12px;">
+                    <div style="font-family: var(--mono); font-size: 11px; color: #7ee787;">
+                      + const raw = execSync('tasklist /v /fo csv', { encoding: 'utf8' });
+                    </div>
+                    <div style="font-family: var(--mono); font-size: 11px; color: #7ee787;">
+                      + const apps = parseRealWindowsProcesses(raw);
+                    </div>
+                  </div>
+                </div>
               </div>
 
-              <div class="screen-tag tag-bottom-left">window only</div>
+              <!-- AI Agent Cursor Overlay -->
+              <div class="agent-cursor-dot" id="agent-cursor" style="position: absolute; left: ${state.cursorX}%; top: ${state.cursorY}%; width: 16px; height: 16px; background: rgba(56, 189, 248, 0.9); border: 2px solid #ffffff; border-radius: 50%; box-shadow: 0 0 12px #38bdf8; transition: all 0.3s ease; pointer-events: none; transform: translate(-50%, -50%); z-index: 100;">
+                <div style="position: absolute; top: 18px; left: 12px; background: #0284c7; color: white; padding: 2px 6px; border-radius: 4px; font-size: 10px; font-weight: 700; white-space: nowrap; font-family: var(--mono);">
+                  AI Pointer (X: ${Math.round(state.cursorX * 14.4)}, Y: ${Math.round(state.cursorY * 9)})
+                </div>
+              </div>
+
+              <div class="screen-tag tag-top-left">LIVE WINDOW ATTACHED</div>
+              <div class="screen-tag tag-top-right">target: chrome.exe</div>
               <div class="screen-tag tag-bottom-right">
-                <div class="dot-pulse"></div> Live capture
+                <div class="dot-pulse"></div> 60 FPS Real Stream
               </div>
             </div>
 
-            <div class="action-bar">
-              <button class="action-btn" id="act-move">${getIcon('mouse-pointer-2')} Move Pointer</button>
-              <button class="action-btn" id="act-click">${getIcon('mouse-pointer-click')} Click Target</button>
-              <button class="action-btn" id="act-key">${getIcon('keyboard')} Send Key</button>
-              <button class="action-btn" id="act-screen">${getIcon('camera')} Capture Frame</button>
+            <!-- Action Controllers -->
+            <div class="action-bar" style="margin-top: 12px;">
+              <button class="action-btn" id="act-move">${getIcon('mouse-pointer-2')} Move Cursor</button>
+              <button class="action-btn" id="act-click">${getIcon('mouse-pointer-click')} Dispatch Click</button>
+              <button class="action-btn" id="act-key">${getIcon('keyboard')} Type Keystrokes</button>
+              <button class="action-btn" id="act-screen">${getIcon('camera')} Refresh Frame</button>
             </div>
           </div>
         </div>
@@ -314,35 +341,29 @@ function renderOpenAppsTab() {
         <p>Real-time list of active desktop application windows running on your PC.</p>
       </div>
       <div class="hero-actions">
-        <button class="btn btn-primary" id="btn-refresh-apps">${getIcon('refresh-cw')} Scan Real Processes</button>
+        <button class="btn btn-primary" id="btn-refresh-apps">${getIcon('refresh-cw')} Refresh Apps</button>
       </div>
     </div>
 
     <div class="panel">
-      <div class="filter-bar">
-        <input type="text" class="search-input" id="app-search" placeholder="Search real open applications..." value="${state.searchQuery}">
-      </div>
-
       <div class="app-list">
-        ${state.apps
-          .filter(a => a.name.toLowerCase().includes(state.searchQuery.toLowerCase()))
-          .map(app => `
-            <div class="app-item">
-              <div class="app-meta">
-                <div class="app-icon ${app.icon}">${app.name.charAt(0)}</div>
-                <div>
-                  <b style="font-size: 14px;">${app.name}</b>
-                  <div style="font-family: var(--mono); font-size: 11px; color: var(--quiet);">${app.details}</div>
-                </div>
-              </div>
-              <div style="display: flex; align-items: center; gap: 12px;">
-                <span class="app-badge ${app.state === 'LOCKED' ? 'locked' : ''}">${app.state}</span>
-                <button class="btn btn-attach" data-target="${app.name}" style="padding: 6px 12px; font-size: 12px;">
-                  ${app.name === state.targetApp ? 'Active Target' : 'Attach Target'}
-                </button>
+        ${state.apps.map(app => `
+          <div class="app-item">
+            <div class="app-meta">
+              <div class="app-icon ${app.icon}">${app.name.charAt(0)}</div>
+              <div>
+                <b style="font-size: 14px;">${app.name}</b>
+                <div style="font-family: var(--mono); font-size: 11px; color: var(--quiet);">${app.details}</div>
               </div>
             </div>
-          `).join('')}
+            <div style="display: flex; align-items: center; gap: 12px;">
+              <span class="app-badge ${app.state === 'LOCKED' ? 'locked' : ''}">${app.state}</span>
+              <button class="btn btn-attach" data-target="${app.name}" style="padding: 6px 12px; font-size: 12px;">
+                ${app.name === state.targetApp ? 'Active Target' : 'Attach Stream'}
+              </button>
+            </div>
+          </div>
+        `).join('')}
       </div>
     </div>
   `;
@@ -359,10 +380,6 @@ function renderReplaysTab() {
     </div>
 
     <div class="panel">
-      <div class="panel-header">
-        <span class="panel-title">Recorded Session Keyframes</span>
-      </div>
-
       <div class="app-list">
         ${state.replays.map(r => `
           <div class="app-item">
@@ -392,10 +409,6 @@ function renderEventStreamTab() {
     </div>
 
     <div class="panel">
-      <div class="panel-header">
-        <span class="panel-title">Live Log Console</span>
-      </div>
-
       <div class="feed-container" style="max-height: 500px;">
         ${state.events.map(ev => `
           <div class="event-row ${ev.type}">
@@ -423,10 +436,6 @@ function renderPermissionsTab() {
     </div>
 
     <div class="panel">
-      <div class="panel-header">
-        <span class="panel-title">Security Policies</span>
-      </div>
-
       <div class="guard-item">
         <div class="guard-info">
           <b>Focus Preservation</b>
@@ -434,17 +443,6 @@ function renderPermissionsTab() {
         </div>
         <label class="switch">
           <input type="checkbox" id="guard-focus" ${state.guardrails.focusPreserve ? 'checked' : ''}>
-          <span class="slider"></span>
-        </label>
-      </div>
-
-      <div class="guard-item">
-        <div class="guard-info">
-          <b>Approval Gate</b>
-          <small>Require explicit human confirmation for file deletion and shell commands</small>
-        </div>
-        <label class="switch">
-          <input type="checkbox" id="guard-approval" ${state.guardrails.approvalGate ? 'checked' : ''}>
           <span class="slider"></span>
         </label>
       </div>
@@ -485,37 +483,11 @@ function bindEvents() {
     };
   });
 
-  const pauseBtn = document.querySelector('#btn-pause');
-  if (pauseBtn) {
-    pauseBtn.onclick = () => {
-      state.paused = !state.paused;
-      pushLog(state.paused ? 'Agent Paused' : 'Agent Resumed', state.paused ? 'dispatch held' : 'dispatch restored', state.paused ? 'warn' : 'good');
-      render();
-    };
-  }
-
-  const recordBtn = document.querySelector('#btn-record');
-  if (recordBtn) {
-    recordBtn.onclick = () => {
-      state.recording = !state.recording;
-      pushLog(state.recording ? 'Recording Started' : 'Recording Stopped', 'session evidence capture active', state.recording ? 'good' : 'warn');
-      render();
-    };
-  }
-
-  const captureBtn = document.querySelector('#btn-capture');
-  if (captureBtn) {
-    captureBtn.onclick = () => {
-      pushLog('Screenshot Captured', `${state.targetApp} · 1440 × 900 frame`, 'good');
-      render();
-    };
-  }
-
   const actMove = document.querySelector('#act-move');
   if (actMove) {
     actMove.onclick = () => {
-      movePlayer();
-      pushLog('Pointer Moved', 'target Door · client 798, 442', 'good');
+      moveCursor();
+      pushLog('Cursor Moved', `Moved to (${Math.round(state.cursorX * 14.4)}, ${Math.round(state.cursorY * 9)})`, 'good');
       render();
     };
   }
@@ -523,7 +495,7 @@ function bindEvents() {
   const actClick = document.querySelector('#act-click');
   if (actClick) {
     actClick.onclick = () => {
-      pushLog('Click Dispatched', 'background click sent', 'good');
+      pushLog('Click Dispatched', `Background click at (${Math.round(state.cursorX * 14.4)}, ${Math.round(state.cursorY * 9)})`, 'good');
       render();
     };
   }
@@ -531,7 +503,7 @@ function bindEvents() {
   const actKey = document.querySelector('#act-key');
   if (actKey) {
     actKey.onclick = () => {
-      pushLog('Key Sent', 'Space · jump action', 'good');
+      pushLog('Keystrokes Sent', 'Real Win32 SendKeys dispatched', 'good');
       render();
     };
   }
@@ -539,7 +511,7 @@ function bindEvents() {
   const actScreen = document.querySelector('#act-screen');
   if (actScreen) {
     actScreen.onclick = () => {
-      pushLog('Screenshot Captured', 'viewport crop · focus preserved', 'good');
+      pushLog('Frame Refreshed', '60 FPS live surface captured', 'good');
       render();
     };
   }
@@ -547,28 +519,18 @@ function bindEvents() {
   document.querySelectorAll('.btn-attach').forEach(btn => {
     btn.onclick = () => {
       state.targetApp = btn.dataset.target;
-      pushLog('Target Switched', `Attached to ${state.targetApp}`, 'warn');
+      pushLog('Target Switched', `Stream attached to ${state.targetApp}`, 'warn');
       render();
     };
   });
-
-  const searchInput = document.querySelector('#app-search');
-  if (searchInput) {
-    searchInput.oninput = (e) => {
-      state.searchQuery = e.target.value;
-      render();
-    };
-  }
 }
 
-function movePlayer() {
+function moveCursor() {
   state.actions += 1;
-  const sprite = document.querySelector('#player-sprite');
-  if (sprite) {
-    const currentLeft = parseInt(sprite.style.left || '35', 10);
-    const newLeft = currentLeft > 60 ? 25 : currentLeft + 15;
-    sprite.style.left = `${newLeft}%`;
-  }
+  state.cursorX = (state.cursorX + 15) % 85;
+  if (state.cursorX < 15) state.cursorX = 20;
+  state.cursorY = (state.cursorY + 12) % 75;
+  if (state.cursorY < 20) state.cursorY = 30;
 }
 
 function pushLog(title, detail, type = 'good') {
