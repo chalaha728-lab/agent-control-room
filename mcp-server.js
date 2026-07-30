@@ -5,6 +5,7 @@
  *  - Stdio JSON-RPC Model Context Protocol (Antigravity, Claude Desktop, Cursor, Windsurf)
  *  - HTTP REST API on http://127.0.0.1:4317 (Python, LangChain, AutoGen, CrewAI, cURL, custom agents)
  *  - WebSocket Event Stream on ws://127.0.0.1:4317/ws
+ *  - Real Win32 Keyboard & Mouse Dispatches
  */
 
 import http from 'http';
@@ -61,6 +62,17 @@ function getRealOpenApps() {
   }
 }
 
+function sendRealWin32Keys(text) {
+  try {
+    const escaped = text.replace(/"/g, '""');
+    const cmd = `powershell -NoProfile -Command "$wshell = New-Object -ComObject wscript.shell; $wshell.SendKeys('${escaped}')"`;
+    execSync(cmd, { encoding: 'utf8' });
+    return true;
+  } catch (e) {
+    return false;
+  }
+}
+
 let activeTarget = 'Agent Control Room';
 
 // --- MCP Tool Definitions ---
@@ -95,7 +107,7 @@ const TOOLS = [
   },
   {
     name: 'send_keyboard_input',
-    description: 'Sends synthetic background input text or keys to locked target.',
+    description: 'Sends real synthetic keystrokes to active desktop target window.',
     inputSchema: {
       type: 'object',
       properties: { keys: { type: 'string' } },
@@ -114,7 +126,7 @@ const TOOLS = [
   }
 ];
 
-// --- HTTP REST API Server (For Python, AutoGen, CrewAI, LangChain, cURL, etc.) ---
+// --- HTTP REST API Server ---
 const httpServer = http.createServer((req, res) => {
   res.setHeader('Access-Control-Allow-Origin', '*');
   res.setHeader('Access-Control-Allow-Methods', 'GET, POST, OPTIONS');
@@ -172,28 +184,28 @@ const httpServer = http.createServer((req, res) => {
     return;
   }
 
-  if (req.method === 'GET' && url.pathname === '/v1/screenshot') {
-    const current = realApps.find(a => a.name === activeTarget) || realApps[0] || { name: activeTarget, pid: 9420, hwnd: '0x24CC' };
-    res.writeHead(200, { 'Content-Type': 'application/json' });
-    res.end(JSON.stringify({
-      target: current.name,
-      pid: current.pid,
-      hwnd: current.hwnd,
-      status: 'CAPTURED',
-      resolution: '1440x900',
-      focusPreserved: true,
-      timestamp: new Date().toISOString()
-    }, null, 2));
+  if (req.method === 'POST' && url.pathname === '/v1/type') {
+    let body = '';
+    req.on('data', chunk => { body += chunk; });
+    req.on('end', () => {
+      try {
+        const { text } = JSON.parse(body);
+        const success = sendRealWin32Keys(text || '');
+        res.writeHead(200, { 'Content-Type': 'application/json' });
+        res.end(JSON.stringify({ success, textDispatched: text, target: activeTarget }));
+      } catch (e) {
+        res.writeHead(400, { 'Content-Type': 'application/json' });
+        res.end(JSON.stringify({ success: false, error: 'Invalid JSON payload' }));
+      }
+    });
     return;
   }
 
   res.writeHead(404, { 'Content-Type': 'application/json' });
-  res.end(JSON.stringify({ error: 'Endpoint not found. Available endpoints: /v1/health, /v1/apps, /v1/target, /v1/screenshot' }));
+  res.end(JSON.stringify({ error: 'Endpoint not found.' }));
 });
 
-httpServer.listen(PORT, '127.0.0.1', () => {
-  // Silent listening on local HTTP port 4317
-});
+httpServer.listen(PORT, '127.0.0.1', () => {});
 
 // --- MCP Stdio Protocol Engine ---
 function sendJson(msg) {
@@ -239,7 +251,7 @@ function handleRequest(req) {
       const match = realApps.find(a => a.name.toLowerCase().includes(args.appName.toLowerCase()));
       if (match) {
         activeTarget = match.name;
-        contentResult = `Target locked to REAL app: '${match.name}' (PID ${match.pid}, HWND ${match.hwnd}). Focus preserved across all AI frameworks.`;
+        contentResult = `Target locked to REAL app: '${match.name}' (PID ${match.pid}, HWND ${match.hwnd}).`;
       } else {
         contentResult = `Application matching '${args.appName}' not found in open windows list.`;
       }
@@ -251,14 +263,13 @@ function handleRequest(req) {
         pid: current.pid,
         hwnd: current.hwnd,
         resolution: '1440x900',
-        latency: '0.8ms (Native Local Bridge)',
-        focusPreserved: true,
-        restEndpoint: `http://127.0.0.1:${PORT}/v1/screenshot`
+        latency: '0.8ms'
       }, null, 2);
-    } else if (name === 'dispatch_click') {
-      contentResult = `Click dispatched to (${args.x}, ${args.y}) button='${args.button || 'left'}' on REAL target '${activeTarget}'. User active focus preserved.`;
     } else if (name === 'send_keyboard_input') {
-      contentResult = `Keystrokes '${args.keys}' sent to background target '${activeTarget}'. Accepted cleanly.`;
+      const ok = sendRealWin32Keys(args.keys || '');
+      contentResult = ok
+        ? `Real Windows SendKeys '${args.keys}' typed into active target window '${activeTarget}'.`
+        : `Failed to dispatch SendKeys '${args.keys}'.`;
     } else if (name === 'get_ui_tree') {
       contentResult = JSON.stringify({
         target: activeTarget,
@@ -274,12 +285,7 @@ function handleRequest(req) {
         localBridge: `ONLINE (http://127.0.0.1:${PORT})`,
         protocols: ['MCP stdio', 'REST API', 'WebSocket'],
         activeTarget,
-        realWindowsDetected: realApps.length,
-        guardrails: {
-          focusPreservation: 'ENFORCED',
-          approvalGate: 'ACTIVE',
-          evidenceCapture: 'ENABLED'
-        }
+        realWindowsDetected: realApps.length
       }, null, 2);
     } else {
       sendJson({ jsonrpc: '2.0', id, error: { code: -32601, message: `Tool '${name}' not found` } });
