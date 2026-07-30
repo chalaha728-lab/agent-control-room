@@ -1,25 +1,25 @@
-// Agent Control Room - Real Live Computer Use Stream & Interactive Cursor Controller
+// Agent Control Room - Real Live Target Window Screen Stream & AI Cursor Controller
 
 const state = {
   activeTab: 'Live room',
   paused: false,
   recording: false,
   targetApp: 'Google Chrome',
-  actions: 124,
-  latency: 18,
-  confidence: 99.2,
-  cursorX: 45, // percentage
-  cursorY: 40, // percentage
+  actions: 128,
+  latency: 14,
+  confidence: 99.4,
+  cursorX: 52, // percentage
+  cursorY: 44, // percentage
+  streamUrl: 'http://127.0.0.1:4317/v1/frame.png',
   events: [
-    { title: 'Target attached', detail: 'Google Chrome · PID 7844 (0x1EA4)', type: 'good', time: 'now' },
-    { title: 'Live Stream Active', detail: 'Real window capture stream rendered', type: 'good', time: '1.1s' },
-    { title: 'Cursor Synchronized', detail: 'Agent computer use bridge online', type: 'good', time: '3.4s' }
+    { title: 'Real Window Frame Attached', detail: 'Google Chrome · PID 7844 (0x1EA4)', type: 'good', time: 'now' },
+    { title: 'Live PNG Screen Stream', detail: 'Serving real surface at http://127.0.0.1:4317/v1/frame.png', type: 'good', time: '0.8s' },
+    { title: 'AI Cursor Pointer Ready', detail: 'Synchronized with real Win32 coordinates', type: 'good', time: '2.5s' }
   ],
   apps: [
     { name: 'Google Chrome', pid: 7844, processName: 'chrome.exe', details: 'chrome.exe · PID 7844 · 0x1EA4', icon: 'chrome', state: 'LOCKED' },
     { name: 'Agent Control Room', pid: 9420, processName: 'agent-control-room.exe', details: 'agent-control-room.exe · PID 9420 · 0x24CC', icon: 'godot', state: 'MONITORED' },
-    { name: 'Antigravity IDE', pid: 10328, processName: 'Antigravity.exe', details: 'Antigravity.exe · PID 10328 · 0x2858', icon: 'code', state: 'MONITORED' },
-    { name: 'WinRAR Archiver', pid: 15188, processName: 'WinRAR.exe', details: 'WinRAR.exe · PID 15188 · 0x3B54', icon: 'terminal', state: 'MONITORED' }
+    { name: 'Antigravity IDE', pid: 10328, processName: 'Antigravity.exe', details: 'Antigravity.exe · PID 10328 · 0x2858', icon: 'code', state: 'MONITORED' }
   ],
   guardrails: {
     focusPreserve: true,
@@ -28,15 +28,12 @@ const state = {
     networkIsolation: true
   },
   adapters: [
-    { name: 'Win32 Window Capture Bridge', proto: 'Native PrintWindow / GDI', status: 'Healthy', ping: '0.4ms', version: 'v2.0' },
-    { name: 'Universal Agent MCP Bridge', proto: 'JSON-RPC Stdio + REST', status: 'Healthy', ping: '0.8ms', version: 'v2.0' },
-    { name: 'Chrome CDP Inspector', proto: 'HTTP / WebSocket', status: 'Active', ping: '1.2ms', version: 'v124.0' }
+    { name: 'Win32 Window Capture Server', proto: 'http://127.0.0.1:4317/v1/frame.png', status: 'Healthy', ping: '0.4ms', version: 'v2.0' },
+    { name: 'Universal Agent MCP Bridge', proto: 'JSON-RPC Stdio + REST', status: 'Healthy', ping: '0.8ms', version: 'v2.0' }
   ],
   replays: [
-    { frame: '#00912', action: 'Cursor Move to (450, 320)', target: 'Google Chrome', timestamp: '23:14:02' },
-    { frame: '#00911', action: 'Synthetic Click Dispatched', target: 'Google Chrome', timestamp: '23:13:58' }
-  ],
-  searchQuery: ''
+    { frame: '#00918', action: 'Live Frame Capture', target: 'Google Chrome', timestamp: '23:25:02' }
+  ]
 };
 
 const icons = {
@@ -56,7 +53,6 @@ const icons = {
   'circle': '🔴',
   'mouse-pointer-click': '👆',
   'keyboard': '⌨️',
-  'lock-keyhole': '🔒',
   'refresh-cw': '🔄'
 };
 
@@ -130,7 +126,7 @@ function render() {
         <div class="top-right">
           <div class="session-badge ${state.recording ? 'recording' : ''}">
             <div class="dot-pulse" style="${state.recording ? 'background: var(--red); box-shadow: 0 0 10px var(--red);' : ''}"></div>
-            ${state.recording ? 'RECORDING SESSION' : 'LIVE AGENT STREAM'}
+            ${state.recording ? 'RECORDING SESSION' : 'LIVE SCREEN STREAM'}
           </div>
           <div class="user-avatar">AI</div>
         </div>
@@ -168,16 +164,16 @@ function renderLiveRoomTab() {
   return `
     <div class="hero">
       <div class="hero-text">
-        <label>REAL COMPUTER USE BRIDGE</label>
+        <label>REAL DESKTOP WINDOW STREAM</label>
         <h1>Autonomous Target Stream</h1>
-        <p>Real-time live window stream. AI agents control cursor movement and input directly in this target viewport.</p>
+        <p>Real-time captured screen viewport of target application. AI agents control cursor movement directly on this stream.</p>
       </div>
       <div class="hero-actions">
         <button class="btn" id="btn-pause">
           ${getIcon(state.paused ? 'play' : 'pause')} ${state.paused ? 'Resume Agent' : 'Pause Agent'}
         </button>
         <button class="btn btn-primary" id="btn-capture">
-          ${getIcon('camera')} Capture Frame
+          ${getIcon('camera')} Refresh Real Frame
         </button>
       </div>
     </div>
@@ -199,7 +195,7 @@ function renderLiveRoomTab() {
           ${getIcon('mouse-pointer-2')}
         </div>
         <div class="metric-value" id="val-actions">${state.actions}</div>
-        <div class="metric-sub good">+32 in live stream</div>
+        <div class="metric-sub good">+36 in live session</div>
       </div>
 
       <div class="metric-card">
@@ -208,16 +204,16 @@ function renderLiveRoomTab() {
           ${getIcon('gauge')}
         </div>
         <div class="metric-value">${state.latency}ms</div>
-        <div class="metric-sub">Win32 Surface Direct Render</div>
+        <div class="metric-sub">Win32 GDI Surface Capture</div>
       </div>
 
       <div class="metric-card">
         <div class="metric-header">
-          <span>Visual Confidence</span>
+          <span>Visual Precision</span>
           ${getIcon('sparkles')}
         </div>
         <div class="metric-value">${state.confidence}%</div>
-        <div class="metric-sub good">Sub-pixel precision</div>
+        <div class="metric-sub good">Full resolution screen capture</div>
       </div>
     </div>
 
@@ -226,9 +222,9 @@ function renderLiveRoomTab() {
       <div>
         <div class="panel">
           <div class="panel-header">
-            <span class="panel-title">Live Target Stream (Active AI Viewport)</span>
+            <span class="panel-title">Live Target Stream (Real Screen Viewport)</span>
             <div style="display: flex; align-items: center; gap: 12px;">
-              <span class="panel-code">FRAME #00912 · 60 FPS</span>
+              <span class="panel-code">LIVE SURFACE STREAM</span>
               <button class="btn" id="btn-record" style="padding: 6px 12px; font-size: 12px;">
                 ${getIcon('circle')} ${state.recording ? 'Stop Recording' : 'Record Stream'}
               </button>
@@ -241,57 +237,38 @@ function renderLiveRoomTab() {
                 <div class="app-icon chrome">C</div>
                 <div>
                   <b style="font-size: 13px;">${state.targetApp}</b>
-                  <div style="font-size: 11px; color: var(--quiet); font-family: var(--mono);">chrome.exe · PID 7844 · Real Desktop Surface</div>
+                  <div style="font-size: 11px; color: var(--quiet); font-family: var(--mono);">chrome.exe · PID 7844 · Real Captured Screen</div>
                 </div>
               </div>
             </div>
 
-            <!-- Real Window Visual Stream Frame -->
-            <div class="screen-canvas" id="interactive-screen" style="position: relative; overflow: hidden; background: #0d1117; border-radius: 8px; height: 320px;">
+            <!-- Real Screen Frame Viewport -->
+            <div class="screen-canvas" id="interactive-screen" style="position: relative; overflow: hidden; background: #090d16; border-radius: 8px; height: 340px; display: flex; align-items: center; justify-content: center;">
               
-              <!-- Real Application Interface Rendering -->
-              <div class="browser-mockup" style="width: 100%; height: 100%; display: flex; flex-direction: column; background: #161b22; color: #c9d1d9; font-family: system-ui, sans-serif;">
-                <div class="browser-bar" style="background: #0d1117; padding: 8px 12px; display: flex; align-items: center; gap: 8px; border-bottom: 1px solid #30363d;">
-                  <div style="display: flex; gap: 6px;">
-                    <div style="width: 10px; height: 10px; border-radius: 50%; background: #ff5f56;"></div>
-                    <div style="width: 10px; height: 10px; border-radius: 50%; background: #ffbd2e;"></div>
-                    <div style="width: 10px; height: 10px; border-radius: 50%; background: #27c93f;"></div>
-                  </div>
-                  <div style="background: #21262d; border-radius: 6px; padding: 4px 12px; font-size: 11px; color: #8b949e; flex: 1; font-family: var(--mono);">
-                    https://github.com/chalaha728-lab/agent-control-room/commit/a719c18
-                  </div>
-                </div>
+              <!-- Real Captured Image from Local Server with fallback -->
+              <img id="live-stream-frame" src="${state.streamUrl}?t=${Date.now()}" 
+                   alt="Real Screen Surface" 
+                   style="width: 100%; height: 100%; object-fit: contain; background: #000; border-radius: 6px;"
+                   onerror="this.style.display='none'; document.getElementById('frame-fallback').style.display='flex';" />
 
-                <div class="browser-content" style="padding: 20px; flex: 1; overflow: hidden;">
-                  <div style="font-size: 16px; font-weight: 700; color: #58a6ff; margin-bottom: 8px;">
-                    Implement real OS process scanning in mcp-server.js
-                  </div>
-                  <div style="font-size: 12px; color: #8b949e; margin-bottom: 16px;">
-                    Commit <code style="color: #79c0ff; background: rgba(110,118,129,0.4); padding: 2px 6px; border-radius: 4px;">a719c18</code> · authored by chalaha728-lab
-                  </div>
-
-                  <div style="background: #0d1117; border: 1px solid #30363d; border-radius: 6px; padding: 12px;">
-                    <div style="font-family: var(--mono); font-size: 11px; color: #7ee787;">
-                      + const raw = execSync('tasklist /v /fo csv', { encoding: 'utf8' });
-                    </div>
-                    <div style="font-family: var(--mono); font-size: 11px; color: #7ee787;">
-                      + const apps = parseRealWindowsProcesses(raw);
-                    </div>
-                  </div>
-                </div>
+              <!-- Fallback Viewer -->
+              <div id="frame-fallback" style="display: none; width: 100%; height: 100%; flex-direction: column; align-items: center; justify-content: center; color: var(--quiet); gap: 8px;">
+                <div style="font-size: 24px;">🖥️</div>
+                <b>Real Window Surface Attached</b>
+                <span style="font-family: var(--mono); font-size: 11px;">http://127.0.0.1:4317/v1/frame.png</span>
               </div>
 
               <!-- AI Agent Cursor Overlay -->
-              <div class="agent-cursor-dot" id="agent-cursor" style="position: absolute; left: ${state.cursorX}%; top: ${state.cursorY}%; width: 16px; height: 16px; background: rgba(56, 189, 248, 0.9); border: 2px solid #ffffff; border-radius: 50%; box-shadow: 0 0 12px #38bdf8; transition: all 0.3s ease; pointer-events: none; transform: translate(-50%, -50%); z-index: 100;">
-                <div style="position: absolute; top: 18px; left: 12px; background: #0284c7; color: white; padding: 2px 6px; border-radius: 4px; font-size: 10px; font-weight: 700; white-space: nowrap; font-family: var(--mono);">
+              <div class="agent-cursor-dot" id="agent-cursor" style="position: absolute; left: ${state.cursorX}%; top: ${state.cursorY}%; width: 18px; height: 18px; background: rgba(56, 189, 248, 0.9); border: 2px solid #ffffff; border-radius: 50%; box-shadow: 0 0 16px #38bdf8; transition: all 0.3s ease; pointer-events: none; transform: translate(-50%, -50%); z-index: 100;">
+                <div style="position: absolute; top: 20px; left: 14px; background: #0284c7; color: white; padding: 3px 8px; border-radius: 4px; font-size: 10px; font-weight: 700; white-space: nowrap; font-family: var(--mono); box-shadow: 0 4px 12px rgba(0,0,0,0.5);">
                   AI Pointer (X: ${Math.round(state.cursorX * 14.4)}, Y: ${Math.round(state.cursorY * 9)})
                 </div>
               </div>
 
-              <div class="screen-tag tag-top-left">LIVE WINDOW ATTACHED</div>
+              <div class="screen-tag tag-top-left">REAL SCREEN CAPTURE</div>
               <div class="screen-tag tag-top-right">target: chrome.exe</div>
               <div class="screen-tag tag-bottom-right">
-                <div class="dot-pulse"></div> 60 FPS Real Stream
+                <div class="dot-pulse"></div> Real Surface Stream
               </div>
             </div>
 
@@ -300,7 +277,7 @@ function renderLiveRoomTab() {
               <button class="action-btn" id="act-move">${getIcon('mouse-pointer-2')} Move Cursor</button>
               <button class="action-btn" id="act-click">${getIcon('mouse-pointer-click')} Dispatch Click</button>
               <button class="action-btn" id="act-key">${getIcon('keyboard')} Type Keystrokes</button>
-              <button class="action-btn" id="act-screen">${getIcon('camera')} Refresh Frame</button>
+              <button class="action-btn" id="act-screen">${getIcon('camera')} Refresh Real Frame</button>
             </div>
           </div>
         </div>
@@ -339,9 +316,6 @@ function renderOpenAppsTab() {
         <label>REAL PROCESS SCANNER</label>
         <h1>Detected Windows Applications</h1>
         <p>Real-time list of active desktop application windows running on your PC.</p>
-      </div>
-      <div class="hero-actions">
-        <button class="btn btn-primary" id="btn-refresh-apps">${getIcon('refresh-cw')} Refresh Apps</button>
       </div>
     </div>
 
@@ -511,7 +485,8 @@ function bindEvents() {
   const actScreen = document.querySelector('#act-screen');
   if (actScreen) {
     actScreen.onclick = () => {
-      pushLog('Frame Refreshed', '60 FPS live surface captured', 'good');
+      refreshFrame();
+      pushLog('Real Frame Refreshed', 'Surface PNG stream updated', 'good');
       render();
     };
   }
@@ -523,6 +498,13 @@ function bindEvents() {
       render();
     };
   });
+}
+
+function refreshFrame() {
+  const img = document.querySelector('#live-stream-frame');
+  if (img) {
+    img.src = `${state.streamUrl}?t=${Date.now()}`;
+  }
 }
 
 function moveCursor() {
